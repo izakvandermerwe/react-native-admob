@@ -2,9 +2,10 @@ package com.sbugert.rnadmob;
 
 import android.support.annotation.Nullable;
 import android.util.Log;
-
+import java.util.ArrayList;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.annotations.ReactProp;
@@ -25,7 +26,7 @@ public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGro
 
   public static final String REACT_CLASS = "RNAdMobDFP";
 
-  public static final String PROP_BANNER_SIZE = "bannerSize";
+  public static final String PROP_BANNER_SIZE = "bannerSizes";
   public static final String PROP_AD_UNIT_ID = "adUnitID";
   public static final String PROP_TEST_DEVICE_ID = "testDeviceID";
 
@@ -105,6 +106,22 @@ public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGro
         adView.measure(width, height);
         adView.layout(left, top, left + width, top + height);
         mEventEmitter.receiveEvent(view.getId(), Events.EVENT_RECEIVE_AD.toString(), null);
+
+      
+        if (adView.getAdSize() == AdSize.SMART_BANNER) {
+          width = (int) PixelUtil.toDIPFromPixel(adView.getAdSize().getWidthInPixels(mThemedReactContext));
+          height = (int) PixelUtil.toDIPFromPixel(adView.getAdSize().getHeightInPixels(mThemedReactContext));
+        }
+        else {
+          width = adView.getAdSize().getWidth();
+          height = adView.getAdSize().getHeight();
+        }
+
+        WritableMap event = Arguments.createMap();
+        event.putDouble("width", width);
+        event.putDouble("height", height);
+        mEventEmitter.receiveEvent(view.getId(), Events.EVENT_SIZE_CHANGE.toString(), event);
+
       }
 
       @Override
@@ -155,12 +172,49 @@ public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGro
     return builder.build();
   }
 
-  @ReactProp(name = PROP_BANNER_SIZE)
-  public void setBannerSize(final ReactViewGroup view, final String sizeString) {
-    AdSize adSize = getAdSizeFromString(sizeString);
-    AdSize[] adSizes = new AdSize[1];
-    adSizes[0] = adSize;
 
+private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableArray) {
+    ArrayList<Object> array = new ArrayList<Object>();
+    for (int i = 0; i < readableArray.size(); i++) {
+        switch (readableArray.getType(i)) {
+            case Null:
+                break;
+            case Boolean:
+                array.add(readableArray.getBoolean(i));
+                break;
+            case Number:
+                array.add(readableArray.getDouble(i));
+                break;
+            case String:
+                array.add(readableArray.getString(i));
+                break;
+           /* case Map:
+                array.put(convertMapToJson(readableArray.getMap(i)));
+                break;*/
+            case Array:
+                array.add(convertArrayToArrayList(readableArray.getArray(i)));
+                break;
+        }
+    }
+    return array;
+}
+
+
+  @ReactProp(name = PROP_BANNER_SIZE)
+  public void setBannerSizes(final ReactViewGroup view, final ReadableArray arr) {
+    //Log.d("PublisherAdBanner - setBannerSize", String.valueOf(sizeStringArray));
+   ArrayList<Object> objArr = convertArrayToArrayList(arr);
+
+    AdSize[] adSizes = new AdSize[objArr.size()];
+    int index = 0;
+    for(Object size : objArr)
+    {
+        Log.d("PublisherAdBanner - setBannerSize - parsing:", String.valueOf(size.toString()));
+        AdSize adSize = getAdSizeFromString(size.toString());
+        adSizes[index] = adSize;
+        index ++;
+    }
+ 
     // store old ad unit ID (even if not yet present and thus null)
     PublisherAdView oldAdView = (PublisherAdView) view.getChildAt(0);
     String adUnitId = oldAdView.getAdUnitId();
@@ -171,7 +225,8 @@ public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGro
     newAdView.setAdUnitId(adUnitId);
 
     // send measurements to js to style the AdView in react
-    int width;
+    //Currently we cannot set a predefined size.as the control takes a list of available sizes...
+   /* int width;
     int height;
     WritableMap event = Arguments.createMap();
     if (adSize == AdSize.SMART_BANNER) {
@@ -184,7 +239,7 @@ public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGro
     }
     event.putDouble("width", width);
     event.putDouble("height", height);
-    mEventEmitter.receiveEvent(view.getId(), Events.EVENT_SIZE_CHANGE.toString(), event);
+    mEventEmitter.receiveEvent(view.getId(), Events.EVENT_SIZE_CHANGE.toString(), event);*/
 
     loadAd(newAdView);
   }

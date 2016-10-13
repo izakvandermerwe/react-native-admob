@@ -24,7 +24,7 @@ export default class PublisherBanner extends React.Component {
   }
 
   render() {
-    const { adUnitID, testDeviceID, bannerSize, style, didFailToReceiveAdWithError,admobDispatchAppEvent } = this.props;
+    const { adUnitID, testDeviceID, bannerSizes, adKeywords,style, didFailToReceiveAdWithError,admobDispatchAppEvent } = this.props;
     return (
       <View style={this.props.style}>
         <RNBanner
@@ -39,7 +39,8 @@ export default class PublisherBanner extends React.Component {
           onAdmobDispatchAppEvent={(event) => admobDispatchAppEvent(event)}
           testDeviceID={testDeviceID}
           adUnitID={adUnitID}
-          bannerSize={bannerSize} />
+          bannerSizes={bannerSizes}
+          adKeywords={adKeywords} />
       </View>
     );
   }
@@ -61,7 +62,12 @@ PublisherBanner.propTypes = {
    *
    * banner is default
    */
-  bannerSize: React.PropTypes.string,
+  bannerSizes: React.PropTypes.array,
+
+  /** 
+   * Admob banner Keywords
+   */
+  adKeywords : React.PropTypes.array,
 
   /**
    * AdMob ad unit ID
@@ -86,5 +92,5 @@ PublisherBanner.propTypes = {
   ...View.propTypes,
 };
 
-PublisherBanner.defaultProps = { bannerSize: 'smartBannerPortrait', didFailToReceiveAdWithError: () => {} ,
+PublisherBanner.defaultProps = { bannerSizes: ["banner"], didFailToReceiveAdWithError: () => {} ,
 admobDispatchAppEvent: () => {}};
