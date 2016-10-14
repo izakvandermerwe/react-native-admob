@@ -54,11 +54,24 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
 }
 
 -(void)loadBanner {
-    if (_adUnitID && _bannerSize) {
-        GADAdSize size = [self getAdSizeFromString:_bannerSize];
-        _bannerView = [[DFPBannerView alloc] initWithAdSize:size];
+    if (_adUnitID && _bannerSizes) {
+        //GADAdSize size = [self getAdSizeFromString:_bannerSize];
+        _bannerView = [[DFPBannerView alloc] init];
+        
+        NSMutableArray *validSizes = [[NSMutableArray alloc] init];
+        
+        for(id currentSize in _bannerSizes)
+        {
+            GADAdSize size = [self getAdSizeFromString:currentSize];
+            [validSizes addObject: NSValueFromGADAdSize(size)];
+             NSLog(@"Parsing adsize(%@)", size);
+        }
+        
+        
+        NSArray *adSizes = [validSizes copy];
+        
         [_bannerView setAppEventDelegate:self]; //added Admob event dispatch listener
-        if(!CGRectEqualToRect(self.bounds, _bannerView.bounds)) {
+       /* if(!CGRectEqualToRect(self.bounds, _bannerView.bounds)) {
             [_eventDispatcher
              sendInputEventWithName:@"onSizeChange"
              body:@{
@@ -66,8 +79,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
                     @"width": [NSNumber numberWithFloat: _bannerView.bounds.size.width],
                     @"height": [NSNumber numberWithFloat: _bannerView.bounds.size.height]
                     }];
-        }
+        }*/
         _bannerView.delegate = self;
+        _bannerView.validAdSizes = adSizes;
         _bannerView.adUnitID = _adUnitID;
         _bannerView.rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;
         GADRequest *request = [GADRequest request];
@@ -93,10 +107,12 @@ didReceiveAppEvent:(NSString *)name
     [_eventDispatcher sendInputEventWithName:@"onAdmobDispatchAppEvent" body:@{ @"target": self.reactTag, name: info }];
 }
 
-- (void)setBannerSize:(NSString *)bannerSize
+- (void)setBannerSizes:(NSArray *)bannerSizes
 {
-    if(![bannerSize isEqual:_bannerSize]) {
-        _bannerSize = bannerSize;
+    NSLog(@"setBannerSizes");
+    
+    if(![bannerSizes isEqual:_bannerSizes]) {
+        _bannerSizes = bannerSizes;
         if (_bannerView) {
             [_bannerView removeFromSuperview];
         }
@@ -150,6 +166,17 @@ didReceiveAppEvent:(NSString *)name
 /// Tells the delegate an ad request loaded an ad.
 - (void)adViewDidReceiveAd:(DFPBannerView *)adView {
     [_eventDispatcher sendInputEventWithName:@"onAdViewDidReceiveAd" body:@{ @"target": self.reactTag }];
+    
+     if(!CGRectEqualToRect(self.bounds, _bannerView.bounds)) {
+     [_eventDispatcher
+     sendInputEventWithName:@"onSizeChange"
+     body:@{
+     @"target": self.reactTag,
+     @"width": [NSNumber numberWithFloat: adView.bounds.size.width],
+     @"height": [NSNumber numberWithFloat: adView.bounds.size.height]
+     }];
+     }
+    
 }
 
 /// Tells the delegate an ad request failed.
