@@ -49,9 +49,29 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
         return kGADAdSizeSmartBannerLandscape;
     }
     else {
-        return kGADAdSizeBanner;
+        return [self parseCustomAdSize:bannerSize];;
     }
 }
+
+- (GADAdSize)parseCustomAdSize:(NSString *)bannerSizeString
+{
+    GADAdSize _localSize = kGADAdSizeBanner;
+    @try {
+        //try parse width x height string to GADAdSize
+        if ([bannerSizeString rangeOfString:@"x"].location != NSNotFound)
+        {
+            NSArray *array = [bannerSizeString componentsSeparatedByString:@"x"];
+            int width = [ array[0] intValue];
+            int height = [ array[1] intValue];
+            _localSize = GADAdSizeFromCGSize(CGSizeMake(width, height));
+        }
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@", exception.reason);
+    }
+    return _localSize;
+}
+
 
 -(void)loadBanner {
     if (_adUnitID && _bannerSizes) {
@@ -69,8 +89,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
         
         
         NSArray *adSizes = [validSizes copy];
+        //added Admob event dispatch listener
+        [_bannerView setAppEventDelegate:self];
         
-        [_bannerView setAppEventDelegate:self]; //added Admob event dispatch listener
+        //This was moved to on adreceived. We do not know the size returned by admob, because we are requesting multiple sizes.
        /* if(!CGRectEqualToRect(self.bounds, _bannerView.bounds)) {
             [_eventDispatcher
              sendInputEventWithName:@"onSizeChange"

@@ -1,5 +1,6 @@
 package com.sbugert.rnadmob;
 
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import com.google.android.gms.ads.doubleclick.PublisherAdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.doubleclick.PublisherAdView;
+import com.google.android.gms.ads.mediation.admob.AdMobExtras;
 
 import java.util.Map;
 
@@ -27,10 +29,12 @@ public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGro
   public static final String REACT_CLASS = "RNAdMobDFP";
 
   public static final String PROP_BANNER_SIZE = "bannerSizes";
+  public static final String PROP_KEYWORDS = "keywords";
   public static final String PROP_AD_UNIT_ID = "adUnitID";
   public static final String PROP_TEST_DEVICE_ID = "testDeviceID";
 
   private String testDeviceID = null;
+  private ArrayList<Object> keywords = null;
 
   public enum Events {
     EVENT_SIZE_CHANGE("onSizeChange"),
@@ -200,6 +204,27 @@ private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableA
 }
 
 
+    @ReactProp(name = PROP_KEYWORDS)
+    public void setKeywords(final ReactViewGroup view, final ReadableArray arr)
+    {
+        Log.d("PublisherAdBanner - kw","");
+        keywords = convertArrayToArrayList(arr);
+
+        PublisherAdView oldAdView = (PublisherAdView) view.getChildAt(0);
+        String adUnitId = oldAdView.getAdUnitId();
+
+        attachNewAdView(view);
+        PublisherAdView newAdView = (PublisherAdView) view.getChildAt(0);
+        AdSize[] sizes = oldAdView.getAdSizes();
+        if(oldAdView.getAdSizes() != null && oldAdView.getAdSizes().length > 0) {
+            newAdView.setAdSizes(oldAdView.getAdSizes());
+        }
+
+        newAdView.setAdUnitId(adUnitId);
+
+        loadAd(newAdView);
+    }
+
   @ReactProp(name = PROP_BANNER_SIZE)
   public void setBannerSizes(final ReactViewGroup view, final ReadableArray arr) {
     //Log.d("PublisherAdBanner - setBannerSize", String.valueOf(sizeStringArray));
@@ -209,7 +234,7 @@ private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableA
     int index = 0;
     for(Object size : objArr)
     {
-        Log.d("PublisherAdBanner - setBannerSize - parsing:", String.valueOf(size.toString()));
+        Log.d("PublisherBanner - size:", String.valueOf(size.toString()));
         AdSize adSize = getAdSizeFromString(size.toString());
         adSizes[index] = adSize;
         index ++;
@@ -263,7 +288,7 @@ private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableA
   }
 
   private void loadAd(final PublisherAdView adView) {
-    if (adView.getAdSizes() != null && adView.getAdUnitId() != null) {
+    if (adView.getAdSizes() != null && adView.getAdUnitId() != null && keywords != null) {
       PublisherAdRequest.Builder adRequestBuilder = new PublisherAdRequest.Builder();
       if (testDeviceID != null){
         if (testDeviceID.equals("EMULATOR")) {
@@ -272,6 +297,31 @@ private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableA
           adRequestBuilder = adRequestBuilder.addTestDevice(testDeviceID);
         }
       }
+     
+
+      if(keywords.size() > 0)
+      {
+        try
+        {
+          Bundle adBundle = new Bundle();
+          for(Object kwArr : keywords)
+          {
+              ArrayList<Object> innerArr = (ArrayList<Object>) kwArr;
+              String kw = (String) innerArr.get(0);
+              String value = (String) innerArr.get(1);
+              Log.e("PublisherBanner - KW:", kw + " - " + value);
+              adBundle.putString(kw,value);
+          }
+
+          AdMobExtras extras = new AdMobExtras (adBundle);
+          adRequestBuilder.addNetworkExtras(extras);
+        }
+        catch(Exception ex)
+        {
+          Log.e("PublisherBanner",ex.getMessage());
+        }
+      }
+
       PublisherAdRequest adRequest = adRequestBuilder.build();
       adView.loadAd(adRequest);
     }
@@ -297,7 +347,21 @@ private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableA
       case "smartBanner":
         return AdSize.SMART_BANNER;
       default:
-        return AdSize.BANNER;
+        return parseCustomAdSize(adSize);
     }
   }
+
+    private AdSize parseCustomAdSize(String sizeString)
+    {
+        AdSize adSize = AdSize.BANNER;
+        if(sizeString.contains("x")){
+            String[] sz = sizeString.split("x");
+            try {
+                adSize = new AdSize( Integer.parseInt(sz[0]),Integer.parseInt(sz[1]) );
+            }catch (Exception e){
+                Log.e("PublisherBanner","failed to parse ad size");
+            }
+        }
+        return adSize;
+    }
 }

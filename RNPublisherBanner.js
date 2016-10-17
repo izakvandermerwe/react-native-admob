@@ -24,7 +24,7 @@ export default class PublisherBanner extends React.Component {
   }
 
   render() {
-    const { adUnitID, testDeviceID, bannerSizes, adKeywords,style, didFailToReceiveAdWithError,admobDispatchAppEvent } = this.props;
+    const { adUnitID, testDeviceID, bannerSizes, keywords,style, didFailToReceiveAdWithError,admobDispatchAppEvent } = this.props;
     return (
       <View style={this.props.style}>
         <RNBanner
@@ -40,7 +40,7 @@ export default class PublisherBanner extends React.Component {
           testDeviceID={testDeviceID}
           adUnitID={adUnitID}
           bannerSizes={bannerSizes}
-          adKeywords={adKeywords} />
+          keywords={keywords} />
       </View>
     );
   }
@@ -67,7 +67,7 @@ PublisherBanner.propTypes = {
   /** 
    * Admob banner Keywords
    */
-  adKeywords : React.PropTypes.array,
+  keywords : React.PropTypes.array,
 
   /**
    * AdMob ad unit ID
