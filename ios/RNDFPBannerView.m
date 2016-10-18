@@ -116,6 +116,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
         
         if(_keywords.count > 0)
         {
+            request.keywords = [[NSMutableArray alloc] init];
             //ad keyword params to request
             GADExtras *extras = [[GADExtras alloc] init];
             
@@ -124,19 +125,17 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
             // ]
             
             NSMutableDictionary *kwDict = [[NSMutableDictionary alloc] init];
+            NSMutableArray *kwArr = [[NSMutableArray alloc] init];
             for(id kvp in _keywords)
             {
                 NSString* key = kvp[0];
                 NSString* val = kvp[1];
                 NSLog(@"Parsing kvp (%@, %@)", key, val);
-                //[adKeywords setObject:val forKey:key];
-                kwDict[key] = val;
+                [kwDict setObject:val forKey:key];
+                [kwArr addObject: val];
             }
- 
+            request.keywords = kwArr;
             extras.additionalParameters = kwDict; //["posno": page];
-            //request.keywords = []
-            //request.keywords?.append(page)
-
             [request registerAdNetworkExtras:extras];
         }
         
