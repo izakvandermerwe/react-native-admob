@@ -74,8 +74,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
 
 
 -(void)loadBanner {
-    if (_adUnitID && _bannerSizes) {
-        //GADAdSize size = [self getAdSizeFromString:_bannerSize];
+    if (_adUnitID && _bannerSizes && _keywords) {
         _bannerView = [[DFPBannerView alloc] init];
         
         NSMutableArray *validSizes = [[NSMutableArray alloc] init];
@@ -115,6 +114,32 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
             }
         }
         
+        if(_keywords.count > 0)
+        {
+            //ad keyword params to request
+            GADExtras *extras = [[GADExtras alloc] init];
+            
+            // [ ["key1,"val1",
+            //   ["key2",["val2"]
+            // ]
+            
+            NSMutableDictionary *kwDict = [[NSMutableDictionary alloc] init];
+            for(id kvp in _keywords)
+            {
+                NSString* key = kvp[0];
+                NSString* val = kvp[1];
+                NSLog(@"Parsing kvp (%@, %@)", key, val);
+                //[adKeywords setObject:val forKey:key];
+                kwDict[key] = val;
+            }
+ 
+            extras.additionalParameters = kwDict; //["posno": page];
+            //request.keywords = []
+            //request.keywords?.append(page)
+
+            [request registerAdNetworkExtras:extras];
+        }
+        
         [_bannerView loadRequest:request];
     }
 }
@@ -142,6 +167,18 @@ didReceiveAppEvent:(NSString *)name
     }
 }
 
+- (void)setKeywords:(NSArray *)keywords
+{
+    NSLog(@"setKeywords");
+    
+    if(![keywords isEqual:_keywords]) {
+        _keywords = keywords;
+        if (_bannerView) {
+            [_bannerView removeFromSuperview];
+        }
+        [self loadBanner];
+    }
+}
 
 
 - (void)setAdUnitID:(NSString *)adUnitID
