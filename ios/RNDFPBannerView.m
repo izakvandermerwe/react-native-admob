@@ -74,6 +74,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
 
 
 -(void)loadBanner {
+    
     if (_adUnitID && _bannerSizes && _keywords) {
         _bannerView = [[DFPBannerView alloc] init];
         
@@ -83,7 +84,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
         {
             GADAdSize size = [self getAdSizeFromString:currentSize];
             [validSizes addObject: NSValueFromGADAdSize(size)];
-             NSLog(@"Parsing adsize(%@)", size);
+           //  NSLog(@"Parsing adsize(%@)", size);
         }
         
         
@@ -130,7 +131,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
             {
                 NSString* key = kvp[0];
                 NSString* val = kvp[1];
-                NSLog(@"Parsing kvp (%@, %@)", key, val);
+              //  NSLog(@"Parsing kvp (%@, %@)", key, val);
                 [kwDict setObject:val forKey:key];
                 [kwArr addObject: val];
             }
