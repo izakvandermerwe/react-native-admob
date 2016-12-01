@@ -24,7 +24,7 @@ import com.google.android.gms.ads.mediation.admob.AdMobExtras;
 
 import java.util.Map;
 
-public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGroup> implements AppEventListener {
+public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGroup>{
 
   public static final String REACT_CLASS = "RNAdMobDFP";
 
@@ -67,14 +67,6 @@ public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGro
   }
 
 
-  @Override
-  public void onAppEvent(String name, String info) {
-    String message = String.format("Received app event (%s, %s)", name, info);
-    Log.d("PublisherAdBanner", message);
-    WritableMap event = Arguments.createMap();
-    event.putString(name, info);
-    mEventEmitter.receiveEvent(viewID, Events.EVENT_ADMOB_EVENT_RECEIVED.toString(), event);
-  }
 
   @Override
   protected ReactViewGroup createViewInstance(ThemedReactContext themedReactContext) {
@@ -85,10 +77,11 @@ public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGro
     return view;
    }
 
-  int viewID = -1;
+
+
   protected void attachNewAdView(final ReactViewGroup view) {
     final PublisherAdView adView = new PublisherAdView(mThemedReactContext);
-    adView.setAppEventListener(this);
+    adView.setAppEventListener(new AppEventDispatcher(view,mEventEmitter));
     // destroy old AdView if present
     PublisherAdView oldAdView = (PublisherAdView) view.getChildAt(0);
     view.removeAllViews();
@@ -97,8 +90,29 @@ public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGro
     attachEvents(view);
   }
 
+    static class AppEventDispatcher implements AppEventListener{
+
+
+        private final ReactViewGroup view;
+        private final RCTEventEmitter mEventEmitter;
+
+        public AppEventDispatcher(ReactViewGroup view, RCTEventEmitter mEventEmitter){
+            this.view = view;
+            this.mEventEmitter=mEventEmitter;
+        }
+
+        @Override
+        public void onAppEvent(String name, String info) {
+            String message = String.format("Received app event (%s, %s) viewID:%s", name, info,view.getId());
+            Log.d("PublisherAdBanner", message);
+            WritableMap event = Arguments.createMap();
+            event.putString(name, info);
+            mEventEmitter.receiveEvent(view.getId(), Events.EVENT_ADMOB_EVENT_RECEIVED.toString(), event);
+        }
+    }
+
   protected void attachEvents(final ReactViewGroup view) {
-    viewID = view.getId();
+
     final PublisherAdView adView = (PublisherAdView) view.getChildAt(0);
     adView.setAdListener(new AdListener() {
       @Override
@@ -111,7 +125,7 @@ public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGro
         adView.layout(left, top, left + width, top + height);
         mEventEmitter.receiveEvent(view.getId(), Events.EVENT_RECEIVE_AD.toString(), null);
 
-      
+
         if (adView.getAdSize() == AdSize.SMART_BANNER) {
           width = (int) PixelUtil.toDIPFromPixel(adView.getAdSize().getWidthInPixels(mThemedReactContext));
           height = (int) PixelUtil.toDIPFromPixel(adView.getAdSize().getHeightInPixels(mThemedReactContext));
@@ -239,7 +253,7 @@ private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableA
         adSizes[index] = adSize;
         index ++;
     }
- 
+
     // store old ad unit ID (even if not yet present and thus null)
     PublisherAdView oldAdView = (PublisherAdView) view.getChildAt(0);
     String adUnitId = oldAdView.getAdUnitId();
@@ -297,7 +311,7 @@ private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableA
           adRequestBuilder = adRequestBuilder.addTestDevice(testDeviceID);
         }
       }
-     
+
 
       if(keywords.size() > 0)
       {
