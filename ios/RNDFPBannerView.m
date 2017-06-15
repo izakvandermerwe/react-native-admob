@@ -92,16 +92,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
         //added Admob event dispatch listener
         [_bannerView setAppEventDelegate:self];
         
-        //This was moved to on adreceived. We do not know the size returned by admob, because we are requesting multiple sizes.
-       /* if(!CGRectEqualToRect(self.bounds, _bannerView.bounds)) {
-            [_eventDispatcher
-             sendInputEventWithName:@"onSizeChange"
-             body:@{
-                    @"target": self.reactTag,
-                    @"width": [NSNumber numberWithFloat: _bannerView.bounds.size.width],
-                    @"height": [NSNumber numberWithFloat: _bannerView.bounds.size.height]
-                    }];
-        }*/
         _bannerView.delegate = self;
         _bannerView.validAdSizes = adSizes;
         _bannerView.adUnitID = _adUnitID;
@@ -142,16 +132,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
         
         [_bannerView loadRequest:request];
     }
-}
-
-
-- (void)adView:(DFPBannerView *)banner
-didReceiveAppEvent:(NSString *)name
-      withInfo:(NSString *)info {
-    NSLog(@"Received app event (%@, %@)", name, info);
-    NSMutableDictionary *myDictionary = [[NSMutableDictionary alloc] init];
-    myDictionary[name] = info;
-    [_eventDispatcher sendInputEventWithName:@"onAdmobDispatchAppEvent" body:@{ @"target": self.reactTag, name: info }];
 }
 
 - (void)setBannerSizes:(NSArray *)bannerSizes
@@ -222,48 +202,69 @@ didReceiveAppEvent:(NSString *)name
     [super removeFromSuperview];
 }
 
+- (void)adView:(DFPBannerView *)banner
+didReceiveAppEvent:(NSString *)name
+      withInfo:(NSString *)info {
+    NSLog(@"Received app event (%@, %@)", name, info);
+    NSMutableDictionary *myDictionary = [[NSMutableDictionary alloc] init];
+    myDictionary[name] = info;
+    if (self.onAdmobDispatchAppEvent) {
+        self.onAdmobDispatchAppEvent(@{ name: info });
+    }
+}
+
 /// Tells the delegate an ad request loaded an ad.
 - (void)adViewDidReceiveAd:(DFPBannerView *)adView {
-    [_eventDispatcher sendInputEventWithName:@"onAdViewDidReceiveAd" body:@{ @"target": self.reactTag }];
+    if(!CGRectEqualToRect(self.bounds, _bannerView.bounds)) {
+        if (self.onSizeChange) {
+            self.onSizeChange(@{
+                                @"width": [NSNumber numberWithFloat: _bannerView.bounds.size.width],
+                                @"height": [NSNumber numberWithFloat: _bannerView.bounds.size.height]
+                                });
+        }
+    }
     
-     if(!CGRectEqualToRect(self.bounds, _bannerView.bounds)) {
-     [_eventDispatcher
-     sendInputEventWithName:@"onSizeChange"
-     body:@{
-     @"target": self.reactTag,
-     @"width": [NSNumber numberWithFloat: adView.bounds.size.width],
-     @"height": [NSNumber numberWithFloat: adView.bounds.size.height]
-     }];
-     }
-    
+    if (self.onAdViewDidReceiveAd) {
+        self.onAdViewDidReceiveAd(@{});
+    }
 }
 
 /// Tells the delegate an ad request failed.
 - (void)adView:(DFPBannerView *)adView
 didFailToReceiveAdWithError:(GADRequestError *)error {
-    [_eventDispatcher sendInputEventWithName:@"onDidFailToReceiveAdWithError" body:@{ @"target": self.reactTag, @"error": [error localizedDescription] }];
+    if (self.onDidFailToReceiveAdWithError) {
+        self.onDidFailToReceiveAdWithError(@{ @"error": [error localizedDescription] });
+    }
 }
 
 /// Tells the delegate that a full screen view will be presented in response
 /// to the user clicking on an ad.
 - (void)adViewWillPresentScreen:(DFPBannerView *)adView {
-    [_eventDispatcher sendInputEventWithName:@"onAdViewWillPresentScreen" body:@{ @"target": self.reactTag }];
+    if (self.onAdViewWillPresentScreen) {
+        self.onAdViewWillPresentScreen(@{});
+    }
 }
 
 /// Tells the delegate that the full screen view will be dismissed.
 - (void)adViewWillDismissScreen:(DFPBannerView *)adView {
-    [_eventDispatcher sendInputEventWithName:@"onAdViewWillDismissScreen" body:@{ @"target": self.reactTag }];
+    if (self.onAdViewWillDismissScreen) {
+        self.onAdViewWillDismissScreen(@{});
+    }
 }
 
 /// Tells the delegate that the full screen view has been dismissed.
 - (void)adViewDidDismissScreen:(DFPBannerView *)adView {
-    [_eventDispatcher sendInputEventWithName:@"onAdViewDidDismissScreen" body:@{ @"target": self.reactTag }];
+    if (self.onAdViewDidDismissScreen) {
+        self.onAdViewDidDismissScreen(@{});
+    }
 }
 
 /// Tells the delegate that a user click will open another app (such as
 /// the App Store), backgrounding the current app.
 - (void)adViewWillLeaveApplication:(DFPBannerView *)adView {
-    [_eventDispatcher sendInputEventWithName:@"onAdViewWillLeaveApplication" body:@{ @"target": self.reactTag }];
+    if (self.onAdViewWillLeaveApplication) {
+        self.onAdViewWillLeaveApplication(@{});
+    }
 }
 
 @end
