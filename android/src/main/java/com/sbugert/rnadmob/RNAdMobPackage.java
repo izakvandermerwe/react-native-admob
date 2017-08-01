@@ -15,7 +15,7 @@ public class RNAdMobPackage implements ReactPackage {
 
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-        return Arrays.<NativeModule>asList(new RNAdMobInterstitialAdModule(reactContext));
+        return Arrays.<NativeModule>asList(new RNAdMobInterstitialAdModule(reactContext), new AdCacheModule(reactContext));
     }
 
     @Override
@@ -28,6 +28,7 @@ public class RNAdMobPackage implements ReactPackage {
         List<ViewManager> managers = new ArrayList<>();
         managers.add(new RNAdMobBannerViewManager());
         managers.add(new RNPublisherBannerViewManager());
+        managers.add(new DFPAdViewManager());
         return managers;
     }
 }

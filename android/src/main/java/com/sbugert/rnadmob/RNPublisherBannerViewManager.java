@@ -3,8 +3,14 @@ package com.sbugert.rnadmob;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+
 import java.util.ArrayList;
+
+import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.common.MapBuilder;
@@ -18,352 +24,453 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.doubleclick.AppEventListener;
 import com.google.android.gms.ads.doubleclick.PublisherAdRequest;
 import com.google.android.gms.ads.AdSize;
-import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.doubleclick.PublisherAdView;
 import com.google.android.gms.ads.mediation.admob.AdMobExtras;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class RNPublisherBannerViewManager extends SimpleViewManager<ReactViewGroup>{
+    private static final String LOGTAG = "RNAdMobDFP";
 
-  public static final String REACT_CLASS = "RNAdMobDFP";
+    ViewCache viewCache = ViewCache.instance;
 
-  public static final String PROP_BANNER_SIZE = "bannerSizes";
-  public static final String PROP_KEYWORDS = "keywords";
-  public static final String PROP_AD_UNIT_ID = "adUnitID";
-  public static final String PROP_TEST_DEVICE_ID = "testDeviceID";
 
-  private String testDeviceID = null;
-  private ArrayList<Object> keywords = null;
+    public static final String REACT_CLASS = "RNAdMobDFP";
 
-  public enum Events {
-    EVENT_SIZE_CHANGE("onSizeChange"),
-    EVENT_RECEIVE_AD("onAdViewDidReceiveAd"),
-    EVENT_ERROR("onDidFailToReceiveAdWithError"),
-    EVENT_WILL_PRESENT("onAdViewWillPresentScreen"),
-    EVENT_WILL_DISMISS("onAdViewWillDismissScreen"),
-    EVENT_DID_DISMISS("onAdViewDidDismissScreen"),
-    EVENT_WILL_LEAVE_APP("onAdViewWillLeaveApplication"),
-    EVENT_ADMOB_EVENT_RECEIVED("onAdmobDispatchAppEvent");
+    public static final String PROP_BANNER_SIZE = "bannerSizes";
+    public static final String PROP_KEYWORDS = "keywords";
+    public static final String PROP_AD_UNIT_ID = "adUnitID";
+    public static final String PROP_TEST_DEVICE_ID = "testDeviceID";
 
-    private final String mName;
+    private String testDeviceID = null;
+    private ArrayList<Object> keywords = null;
 
-    Events(final String name) {
-      mName = name;
+    public enum Events {
+        EVENT_SIZE_CHANGE("onSizeChange"),
+        EVENT_RECEIVE_AD("onAdViewDidReceiveAd"),
+        EVENT_ERROR("onDidFailToReceiveAdWithError"),
+        EVENT_WILL_PRESENT("onAdViewWillPresentScreen"),
+        EVENT_WILL_DISMISS("onAdViewWillDismissScreen"),
+        EVENT_DID_DISMISS("onAdViewDidDismissScreen"),
+        EVENT_WILL_LEAVE_APP("onAdViewWillLeaveApplication"),
+        EVENT_ADMOB_EVENT_RECEIVED("onAdmobDispatchAppEvent");
+
+        private final String mName;
+
+        Events(final String name) {
+            mName = name;
+        }
+
+        @Override
+        public String toString() {
+            return mName;
+        }
     }
+
+    private ThemedReactContext mThemedReactContext;
+    private RCTEventEmitter mEventEmitter;
 
     @Override
-    public String toString() {
-      return mName;
+    public String getName() {
+        return REACT_CLASS;
     }
-  }
-
-  private ThemedReactContext mThemedReactContext;
-  private RCTEventEmitter mEventEmitter;
-
-  @Override
-  public String getName() {
-    return REACT_CLASS;
-  }
 
 
 
-  @Override
-  protected ReactViewGroup createViewInstance(ThemedReactContext themedReactContext) {
-    mThemedReactContext = themedReactContext;
-    mEventEmitter = themedReactContext.getJSModule(RCTEventEmitter.class);
-    ReactViewGroup view = new ReactViewGroup(themedReactContext);
-    attachNewAdView(view);
-    return view;
-   }
+    @Override
+    protected ReactViewGroup createViewInstance(ThemedReactContext themedReactContext) {
+        mThemedReactContext = themedReactContext;
+        mEventEmitter = themedReactContext.getJSModule(RCTEventEmitter.class);
+        ReactViewGroup view = new ReactViewGroup(themedReactContext);
+        return view;
+    }
 
 
+    public static WritableMap toWritableMap(Map<String, Object> map) {
+        WritableMap writableMap = Arguments.createMap();
+        Iterator iterator = map.entrySet().iterator();
 
-  protected void attachNewAdView(final ReactViewGroup view) {
-    final PublisherAdView adView = new PublisherAdView(mThemedReactContext);
-    adView.setAppEventListener(new AppEventDispatcher(view,mEventEmitter));
-    // destroy old AdView if present
-    PublisherAdView oldAdView = (PublisherAdView) view.getChildAt(0);
-    view.removeAllViews();
-    if (oldAdView != null) oldAdView.destroy();
-    view.addView(adView);
-    attachEvents(view);
-  }
+        for(Map.Entry pair: map.entrySet()){
 
-    static class AppEventDispatcher implements AppEventListener{
+            Object value = pair.getValue();
+
+            if (value == null) {
+                writableMap.putNull((String) pair.getKey());
+            } else if (value instanceof Boolean) {
+                writableMap.putBoolean((String) pair.getKey(), (Boolean) value);
+            } else if (value instanceof Double) {
+                writableMap.putDouble((String) pair.getKey(), (Double) value);
+            } else if (value instanceof Integer) {
+                writableMap.putInt((String) pair.getKey(), (Integer) value);
+            } else if (value instanceof String) {
+                writableMap.putString((String) pair.getKey(), (String) value);
+            }else{
+                Log.d(LOGTAG, "towriteablemap value dropped"+value);
+            }
+
+            //iterator.remove();
+        }
+
+        return writableMap;
+    }
 
 
-        private final ReactViewGroup view;
+    public static class RNAdListener extends AdListener implements AppEventListener{
+
+
+        private final PublisherAdView adView;
         private final RCTEventEmitter mEventEmitter;
 
-        public AppEventDispatcher(ReactViewGroup view, RCTEventEmitter mEventEmitter){
-            this.view = view;
+        public RNAdListener(PublisherAdView adView , RCTEventEmitter mEventEmitter){
+            this.adView = adView;
             this.mEventEmitter=mEventEmitter;
         }
 
         @Override
         public void onAppEvent(String name, String info) {
-            String message = String.format("Received app event (%s, %s) viewID:%s", name, info,view.getId());
-            Log.d("PublisherAdBanner", message);
-            WritableMap event = Arguments.createMap();
-            event.putString(name, info);
-            mEventEmitter.receiveEvent(view.getId(), Events.EVENT_ADMOB_EVENT_RECEIVED.toString(), event);
+            int id = ((View)adView.getParent()).getId();
+            String message = String.format("Received app event (%s, %s) viewID:%s", name, info,id);
+            Log.d(LOGTAG, "onAppEvent: "+ message);
+            Map<String,Object> event = new HashMap<>();
+            event.put(name, info);
+            emit(Events.EVENT_ADMOB_EVENT_RECEIVED,event);
+        }
+
+        void emit( Events event){
+            emit(event,null);
+        }
+
+        static class EventEntry{
+            public EventEntry(Events e,Map<String,Object> args){
+                this.name =e;
+                this.args=args;
+            }
+            RNPublisherBannerViewManager.Events name;
+            Map<String,Object> args;
+
+        }
+        List<EventEntry> events = new ArrayList<>();
+
+
+
+        void emit( Events event,Map<String,Object> data ){
+            Log.d(LOGTAG, "Emit Event: "+event.toString());
+
+            WritableMap m= null;
+            if(data!=null) {
+                m = toWritableMap(data);
+
+                for(Map.Entry<String, Object> entry: data.entrySet()){
+                    Log.d(LOGTAG, String.format("emit - ARG:  - %s %s",entry.getKey(),entry.getValue()));
+                }
+            }
+            mEventEmitter.receiveEvent(((View) adView.getParent()).getId(), event.toString(), m);
+
+            events.add(new EventEntry(event,data));
+        }
+
+        public void refireEvents( ){
+
+
+            Log.d(LOGTAG, "refireEvents");
+            for (EventEntry e:events) {
+                WritableMap data = null;
+
+                Log.d(LOGTAG, "refireEvents - EVENT: "+e.name.toString());
+                if(e.args!=null) {
+                    data = toWritableMap(e.args);
+                    for(Map.Entry<String, Object> entry: e.args.entrySet()){
+                        Log.d(LOGTAG, String.format("refireEvents - EVENT:  - %s %s",entry.getKey(),entry.getValue()));
+                    }
+                    //data = new WritableMap();
+                }
+
+
+
+                mEventEmitter.receiveEvent(((View) adView.getParent()).getId(), e.name.toString(),data);
+            }
+        }
+
+        @Override
+        public void onAdLoaded() {
+            Log.d(LOGTAG, "onAdLoaded");
+            int width = adView.getAdSize().getWidthInPixels(adView.getContext());
+            int height = adView.getAdSize().getHeightInPixels(adView.getContext());
+            int left = adView.getLeft();
+            int top = adView.getTop();
+            adView.measure(width, height);
+            adView.layout(left, top, left + width, top + height);
+
+            emit(Events.EVENT_RECEIVE_AD);
+
+
+
+            if (adView.getAdSize() == AdSize.SMART_BANNER) {
+                width = (int) PixelUtil.toDIPFromPixel(adView.getAdSize().getWidthInPixels(adView.getContext()));
+                height = (int) PixelUtil.toDIPFromPixel(adView.getAdSize().getHeightInPixels(adView.getContext()));
+            } else {
+                width = adView.getAdSize().getWidth();
+                height = adView.getAdSize().getHeight();
+            }
+
+            Map<String,Object> event = new HashMap<>();
+            event.put("width", width);
+            event.put("height", height);
+            Log.d(LOGTAG, "ADSIZE: " + width + "x" + height);
+
+            for(Map.Entry<String, Object> entry: event.entrySet()){
+                Log.d(LOGTAG, String.format("sizechange - EVENT:  - %s %s",entry.getKey(),entry.getValue()));
+            }
+
+            emit( Events.EVENT_SIZE_CHANGE, event);
+
+        }
+
+        @Override
+        public void onAdFailedToLoad(int errorCode) {
+            Map<String,Object> event = new HashMap<>();
+            switch (errorCode) {
+                case PublisherAdRequest.ERROR_CODE_INTERNAL_ERROR:
+                    Log.d(LOGTAG, "onAdFailedToLoad - ERROR_CODE_INTERNAL_ERROR");
+                    event.put("error", "ERROR_CODE_INTERNAL_ERROR");
+                    break;
+                case PublisherAdRequest.ERROR_CODE_INVALID_REQUEST:
+                    Log.d(LOGTAG, "onAdFailedToLoad - ERROR_CODE_INVALID_REQUEST");
+                    event.put("error", "ERROR_CODE_INVALID_REQUEST");
+                    break;
+                case PublisherAdRequest.ERROR_CODE_NETWORK_ERROR:
+                    Log.d(LOGTAG, "onAdFailedToLoad - ERROR_CODE_NETWORK_ERROR");
+                    event.put("error", "ERROR_CODE_NETWORK_ERROR");
+                    break;
+                case PublisherAdRequest.ERROR_CODE_NO_FILL:
+                    Log.d(LOGTAG, "onAdFailedToLoad - ERROR_CODE_NO_FILL");
+                    event.put("error", "ERROR_CODE_NO_FILL");
+                    break;
+            }
+            emit( Events.EVENT_ERROR, event);
+        }
+
+        @Override
+        public void onAdOpened() {
+            Log.d(LOGTAG, "onAdOpened");
+            emit( Events.EVENT_WILL_PRESENT);
+        }
+
+        @Override
+        public void onAdClosed() {
+            Log.d(LOGTAG, "onAdClosed");
+            emit( Events.EVENT_WILL_DISMISS);
+        }
+
+        @Override
+        public void onAdLeftApplication() {
+            Log.d(LOGTAG, "onAdLeftApplication");
+            emit( Events.EVENT_WILL_LEAVE_APP);
         }
     }
 
-  protected void attachEvents(final ReactViewGroup view) {
-
-    final PublisherAdView adView = (PublisherAdView) view.getChildAt(0);
-    adView.setAdListener(new AdListener() {
-      @Override
-      public void onAdLoaded() {
-        int width = adView.getAdSize().getWidthInPixels(mThemedReactContext);
-        int height = adView.getAdSize().getHeightInPixels(mThemedReactContext);
-        int left = adView.getLeft();
-        int top = adView.getTop();
-        adView.measure(width, height);
-        adView.layout(left, top, left + width, top + height);
-        mEventEmitter.receiveEvent(view.getId(), Events.EVENT_RECEIVE_AD.toString(), null);
-
-
-        if (adView.getAdSize() == AdSize.SMART_BANNER) {
-          width = (int) PixelUtil.toDIPFromPixel(adView.getAdSize().getWidthInPixels(mThemedReactContext));
-          height = (int) PixelUtil.toDIPFromPixel(adView.getAdSize().getHeightInPixels(mThemedReactContext));
+    @Override
+    @Nullable
+    public Map<String, Object> getExportedCustomDirectEventTypeConstants() {
+        MapBuilder.Builder<String, Object> builder = MapBuilder.builder();
+        for (Events event : Events.values()) {
+            builder.put(event.toString(), MapBuilder.of("registrationName", event.toString()));
         }
-        else {
-          width = adView.getAdSize().getWidth();
-          height = adView.getAdSize().getHeight();
-        }
-
-        WritableMap event = Arguments.createMap();
-        event.putDouble("width", width);
-        event.putDouble("height", height);
-        mEventEmitter.receiveEvent(view.getId(), Events.EVENT_SIZE_CHANGE.toString(), event);
-
-      }
-
-      @Override
-      public void onAdFailedToLoad(int errorCode) {
-        WritableMap event = Arguments.createMap();
-        switch (errorCode) {
-          case PublisherAdRequest.ERROR_CODE_INTERNAL_ERROR:
-            event.putString("error", "ERROR_CODE_INTERNAL_ERROR");
-            break;
-          case PublisherAdRequest.ERROR_CODE_INVALID_REQUEST:
-            event.putString("error", "ERROR_CODE_INVALID_REQUEST");
-            break;
-          case PublisherAdRequest.ERROR_CODE_NETWORK_ERROR:
-            event.putString("error", "ERROR_CODE_NETWORK_ERROR");
-            break;
-          case PublisherAdRequest.ERROR_CODE_NO_FILL:
-            event.putString("error", "ERROR_CODE_NO_FILL");
-            break;
-        }
-
-        mEventEmitter.receiveEvent(view.getId(), Events.EVENT_ERROR.toString(), event);
-      }
-
-      @Override
-      public void onAdOpened() {
-        mEventEmitter.receiveEvent(view.getId(), Events.EVENT_WILL_PRESENT.toString(), null);
-      }
-
-      @Override
-      public void onAdClosed() {
-        mEventEmitter.receiveEvent(view.getId(), Events.EVENT_WILL_DISMISS.toString(), null);
-      }
-
-      @Override
-      public void onAdLeftApplication() {
-        mEventEmitter.receiveEvent(view.getId(), Events.EVENT_WILL_LEAVE_APP.toString(), null);
-      }
-    });
-  }
-
-  @Override
-  @Nullable
-  public Map<String, Object> getExportedCustomDirectEventTypeConstants() {
-    MapBuilder.Builder<String, Object> builder = MapBuilder.builder();
-    for (Events event : Events.values()) {
-      builder.put(event.toString(), MapBuilder.of("registrationName", event.toString()));
+        return builder.build();
     }
-    return builder.build();
-  }
 
 
-private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableArray) {
-    ArrayList<Object> array = new ArrayList<Object>();
-    for (int i = 0; i < readableArray.size(); i++) {
-        switch (readableArray.getType(i)) {
-            case Null:
-                break;
-            case Boolean:
-                array.add(readableArray.getBoolean(i));
-                break;
-            case Number:
-                array.add(readableArray.getDouble(i));
-                break;
-            case String:
-                array.add(readableArray.getString(i));
-                break;
+    private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableArray) {
+        ArrayList<Object> array = new ArrayList<Object>();
+        for (int i = 0; i < readableArray.size(); i++) {
+            switch (readableArray.getType(i)) {
+                case Null:
+                    break;
+                case Boolean:
+                    array.add(readableArray.getBoolean(i));
+                    break;
+                case Number:
+                    array.add(readableArray.getDouble(i));
+                    break;
+                case String:
+                    array.add(readableArray.getString(i));
+                    break;
            /* case Map:
                 array.put(convertMapToJson(readableArray.getMap(i)));
                 break;*/
-            case Array:
-                array.add(convertArrayToArrayList(readableArray.getArray(i)));
-                break;
+                case Array:
+                    array.add(convertArrayToArrayList(readableArray.getArray(i)));
+                    break;
+            }
         }
+        return array;
     }
-    return array;
-}
 
+    void setTag(View view, String name, Object value){
+        Object o =view.getTag();
+        if(o==null){
+            o = new HashMap<String,Object>();
+            view.setTag(o);
+        }
+        if(o!=null && o instanceof  Map){
+            Map tag = (Map)o;
+            tag.put(name,value);
+            view.setTag(tag);
+        }else{
+            Log.w(REACT_CLASS, "failed to set tag "+name+" tag obj was already set and not a map");
+        }
+
+    }
 
     @ReactProp(name = PROP_KEYWORDS)
     public void setKeywords(final ReactViewGroup view, final ReadableArray arr)
     {
-        Log.d("PublisherAdBanner - kw","");
+        Log.d(LOGTAG,"setKeyWords");
         keywords = convertArrayToArrayList(arr);
 
-        PublisherAdView oldAdView = (PublisherAdView) view.getChildAt(0);
-        String adUnitId = oldAdView.getAdUnitId();
-
-        attachNewAdView(view);
-        PublisherAdView newAdView = (PublisherAdView) view.getChildAt(0);
-        AdSize[] sizes = oldAdView.getAdSizes();
-        if(oldAdView.getAdSizes() != null && oldAdView.getAdSizes().length > 0) {
-            newAdView.setAdSizes(oldAdView.getAdSizes());
-        }
-
-        newAdView.setAdUnitId(adUnitId);
-
-        loadAd(newAdView);
+        setTag( view, "keywords", keywords );
     }
 
-  @ReactProp(name = PROP_BANNER_SIZE)
-  public void setBannerSizes(final ReactViewGroup view, final ReadableArray arr) {
-    //Log.d("PublisherAdBanner - setBannerSize", String.valueOf(sizeStringArray));
-   ArrayList<Object> objArr = convertArrayToArrayList(arr);
+    @ReactProp(name = PROP_BANNER_SIZE)
+    public void setBannerSizes(final ReactViewGroup view, final ReadableArray arr) {
+        ArrayList<Object> objArr = convertArrayToArrayList(arr);
 
-    AdSize[] adSizes = new AdSize[objArr.size()];
-    int index = 0;
-    for(Object size : objArr)
-    {
-        Log.d("PublisherBanner - size:", String.valueOf(size.toString()));
-        AdSize adSize = getAdSizeFromString(size.toString());
-        adSizes[index] = adSize;
-        index ++;
-    }
-
-    // store old ad unit ID (even if not yet present and thus null)
-    PublisherAdView oldAdView = (PublisherAdView) view.getChildAt(0);
-    String adUnitId = oldAdView.getAdUnitId();
-
-    attachNewAdView(view);
-    PublisherAdView newAdView = (PublisherAdView) view.getChildAt(0);
-    newAdView.setAdSizes(adSizes);
-    newAdView.setAdUnitId(adUnitId);
-
-    // send measurements to js to style the AdView in react
-    //Currently we cannot set a predefined size.as the control takes a list of available sizes...
-   /* int width;
-    int height;
-    WritableMap event = Arguments.createMap();
-    if (adSize == AdSize.SMART_BANNER) {
-      width = (int) PixelUtil.toDIPFromPixel(adSize.getWidthInPixels(mThemedReactContext));
-      height = (int) PixelUtil.toDIPFromPixel(adSize.getHeightInPixels(mThemedReactContext));
-    }
-    else {
-      width = adSize.getWidth();
-      height = adSize.getHeight();
-    }
-    event.putDouble("width", width);
-    event.putDouble("height", height);
-    mEventEmitter.receiveEvent(view.getId(), Events.EVENT_SIZE_CHANGE.toString(), event);*/
-
-    loadAd(newAdView);
-  }
-
-  @ReactProp(name = PROP_AD_UNIT_ID)
-  public void setAdUnitID(final ReactViewGroup view, final String adUnitID) {
-    // store old banner size (even if not yet present and thus null)
-    PublisherAdView oldAdView = (PublisherAdView) view.getChildAt(0);
-    AdSize[] adSizes = oldAdView.getAdSizes();
-
-    attachNewAdView(view);
-    PublisherAdView newAdView = (PublisherAdView) view.getChildAt(0);
-    newAdView.setAdUnitId(adUnitID);
-    newAdView.setAdSizes(adSizes);
-    loadAd(newAdView);
-  }
-
-  @ReactProp(name = PROP_TEST_DEVICE_ID)
-  public void setPropTestDeviceID(final ReactViewGroup view, final String testDeviceID) {
-    this.testDeviceID = testDeviceID;
-  }
-
-  private void loadAd(final PublisherAdView adView) {
-    if (adView.getAdSizes() != null && adView.getAdUnitId() != null && keywords != null) {
-      PublisherAdRequest.Builder adRequestBuilder = new PublisherAdRequest.Builder();
-      if (testDeviceID != null){
-        if (testDeviceID.equals("EMULATOR")) {
-          adRequestBuilder = adRequestBuilder.addTestDevice(PublisherAdRequest.DEVICE_ID_EMULATOR);
-        } else {
-          adRequestBuilder = adRequestBuilder.addTestDevice(testDeviceID);
-        }
-      }
-
-
-      if(keywords.size() > 0)
-      {
-        try
+        AdSize[] adSizes = new AdSize[objArr.size()];
+        int index = 0;
+        for(Object size : objArr)
         {
-          Bundle adBundle = new Bundle();
-          for(Object kwArr : keywords)
-          {
-              ArrayList<Object> innerArr = (ArrayList<Object>) kwArr;
-              String kw = (String) innerArr.get(0);
-              String value = (String) innerArr.get(1);
-              Log.e("PublisherBanner - KW:", kw + " - " + value);
-              adBundle.putString(kw,value);
-          }
-
-          AdMobExtras extras = new AdMobExtras (adBundle);
-          adRequestBuilder.addNetworkExtras(extras);
+            Log.d(LOGTAG,"size:"+ size);
+            AdSize adSize = getAdSizeFromString(size.toString());
+            adSizes[index] = adSize;
+            index ++;
         }
-        catch(Exception ex)
-        {
-          Log.e("PublisherBanner",ex.getMessage());
+
+        setTag(view,"adSizes",adSizes);
+    }
+
+    @ReactProp(name = PROP_AD_UNIT_ID)
+    public void setAdUnitID(final ReactViewGroup view, final String adUnitID) {
+        setTag(view,"adUnit",adUnitID);
+    }
+
+    @ReactProp(name = PROP_TEST_DEVICE_ID)
+    public void setPropTestDeviceID(final ReactViewGroup view, final String testDeviceID) {
+        this.testDeviceID = testDeviceID;
+    }
+
+    @Override
+    public Map<String,Integer> getCommandsMap() {
+        return MapBuilder.of("loadAd", COMMAND_LOAD_AD);
+    }
+
+    private static final int COMMAND_LOAD_AD = 1001;
+    @Override
+    public void receiveCommand( ReactViewGroup view, int commandType, @javax.annotation.Nullable ReadableArray args) {
+        Log.d(LOGTAG, "receiveCommand: "+commandType);
+        Assertions.assertNotNull(view);
+        Assertions.assertNotNull(args);
+        switch (commandType){
+            case COMMAND_LOAD_AD:
+                loadAd(view);
+                break;
         }
-      }
-
-      PublisherAdRequest adRequest = adRequestBuilder.build();
-      adView.loadAd(adRequest);
     }
-  }
 
+    @ReactMethod
+    public void loadAd(final ReactViewGroup view) {
 
-  private AdSize getAdSizeFromString(String adSize) {
-    switch (adSize) {
-      case "banner":
-        return AdSize.BANNER;
-      case "largeBanner":
-        return AdSize.LARGE_BANNER;
-      case "mediumRectangle":
-        return AdSize.MEDIUM_RECTANGLE;
-      case "fullBanner":
-        return AdSize.FULL_BANNER;
-      case "leaderBoard":
-        return AdSize.LEADERBOARD;
-      case "smartBannerPortrait":
-        return AdSize.SMART_BANNER;
-      case "smartBannerLandscape":
-        return AdSize.SMART_BANNER;
-      case "smartBanner":
-        return AdSize.SMART_BANNER;
-      default:
-        return parseCustomAdSize(adSize);
+        Map tag = (Map)view.getTag();
+
+        String adUnit = (String) tag.get("adUnit");
+        String cacheKey = (String) tag.get("cacheKey");
+        String cacheGroup = (String) tag.get("cacheGroup");
+        AdSize[] adSizes = (AdSize[]) tag.get("adSizes");
+
+        PublisherAdRequest.Builder adRequestBuilder = new PublisherAdRequest.Builder();
+
+        if(tag.containsKey("keywords")){
+            ArrayList<Object> keywords = (ArrayList<Object>) tag.get("keywords");
+            if(keywords.size() > 0)
+            {
+                try
+                {
+                    Bundle adBundle = new Bundle();
+                    for(Object kwArr : keywords)
+                    {
+                        ArrayList<Object> innerArr = (ArrayList<Object>) kwArr;
+                        String kw = (String) innerArr.get(0);
+                        String value = (String) innerArr.get(1);
+                        Log.d(LOGTAG,"KW:"+ kw + " - " + value);
+                        cacheKey+="("+kw + " - " + value+")";
+                        adBundle.putString(kw,value);
+                    }
+
+                    AdMobExtras extras = new AdMobExtras (adBundle);
+                    adRequestBuilder.addNetworkExtras(extras);
+                }
+                catch(Exception ex)
+                {
+                    Log.e(LOGTAG,ex.getMessage());
+                }
+            }
+        }
+
+        PublisherAdRequest adRequest = adRequestBuilder.build();
+
+        PublisherAdView adView = (PublisherAdView) view.getChildAt(0);
+        boolean refire = false;
+        if(adView == null){
+
+            adView = viewCache.getView(cacheGroup,cacheKey,PublisherAdView.class);
+            if(adView == null){
+                Log.d(LOGTAG, "creating adview" +cacheKey);
+                adView = new PublisherAdView(mThemedReactContext);
+                adView.setAdUnitId(adUnit);
+                adView.setAdSizes(adSizes);
+                RNAdListener adListener = new RNAdListener(adView,mEventEmitter);
+                adView.setAppEventListener(adListener);
+                adView.setAdListener(adListener);
+                viewCache.addView(cacheGroup, cacheKey,adView);
+                adView.loadAd(adRequest);
+            }else{
+                Log.d(LOGTAG, "using cached adview" +cacheKey);
+                ((ViewGroup)adView.getParent()).removeView(adView);
+                refire=true;
+            }
+            view.addView(adView);
+            if(refire)
+                ((RNAdListener)adView.getAdListener()).refireEvents();
+        }else{
+            Log.d(LOGTAG, "reusing adview" +adUnit);
+        }
     }
-  }
+
+
+    private AdSize getAdSizeFromString(String adSize) {
+        switch (adSize) {
+            case "banner":
+                return AdSize.BANNER;
+            case "largeBanner":
+                return AdSize.LARGE_BANNER;
+            case "mediumRectangle":
+                return AdSize.MEDIUM_RECTANGLE;
+            case "fullBanner":
+                return AdSize.FULL_BANNER;
+            case "leaderBoard":
+                return AdSize.LEADERBOARD;
+            case "smartBannerPortrait":
+                return AdSize.SMART_BANNER;
+            case "smartBannerLandscape":
+                return AdSize.SMART_BANNER;
+            case "smartBanner":
+                return AdSize.SMART_BANNER;
+            default:
+                return parseCustomAdSize(adSize);
+        }
+    }
 
     private AdSize parseCustomAdSize(String sizeString)
     {
@@ -373,7 +480,7 @@ private static ArrayList<Object> convertArrayToArrayList(ReadableArray readableA
             try {
                 adSize = new AdSize( Integer.parseInt(sz[0]),Integer.parseInt(sz[1]) );
             }catch (Exception e){
-                Log.e("PublisherBanner","failed to parse ad size");
+                Log.e(LOGTAG,"failed to parse ad size");
             }
         }
         return adSize;
