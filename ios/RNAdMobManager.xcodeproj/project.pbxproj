@@ -12,6 +12,11 @@
 		A962C2531CB27DBD00E508A1 /* RNAdMobInterstitial.m in Sources */ = {isa = PBXBuildFile; fileRef = A962C2521CB27DBD00E508A1 /* RNAdMobInterstitial.m */; };
 		A96DA7841C146DA600FC639B /* BannerView.m in Sources */ = {isa = PBXBuildFile; fileRef = A96DA7811C146DA600FC639B /* BannerView.m */; };
 		A96DA7851C146DA600FC639B /* RNAdMobManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A96DA7831C146DA600FC639B /* RNAdMobManager.m */; };
+		EE28E8921F2FAD1000A36F95 /* RNAdListener.m in Sources */ = {isa = PBXBuildFile; fileRef = EE28E8911F2FAD1000A36F95 /* RNAdListener.m */; };
+		EE28E89C1F308A5F00A36F95 /* RNAdCache.m in Sources */ = {isa = PBXBuildFile; fileRef = EE28E89B1F308A5F00A36F95 /* RNAdCache.m */; };
+		EE28E89F1F308F2C00A36F95 /* AdCacheModule.m in Sources */ = {isa = PBXBuildFile; fileRef = EE28E89E1F308F2C00A36F95 /* AdCacheModule.m */; };
+		EE3A9BBC1F2F65E7007DCEA9 /* RNDFPAdView.m in Sources */ = {isa = PBXBuildFile; fileRef = EE3A9BBB1F2F65E7007DCEA9 /* RNDFPAdView.m */; };
+		EE3A9BBF1F2F6674007DCEA9 /* DFPAdViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = EE3A9BBE1F2F6674007DCEA9 /* DFPAdViewManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -38,6 +43,16 @@
 		A96DA7811C146DA600FC639B /* BannerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BannerView.m; sourceTree = SOURCE_ROOT; };
 		A96DA7821C146DA600FC639B /* RNAdMobManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNAdMobManager.h; sourceTree = SOURCE_ROOT; };
 		A96DA7831C146DA600FC639B /* RNAdMobManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNAdMobManager.m; sourceTree = SOURCE_ROOT; };
+		EE28E8901F2FAD1000A36F95 /* RNAdListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNAdListener.h; sourceTree = SOURCE_ROOT; };
+		EE28E8911F2FAD1000A36F95 /* RNAdListener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNAdListener.m; sourceTree = SOURCE_ROOT; };
+		EE28E89A1F30866900A36F95 /* RNAdCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNAdCache.h; sourceTree = SOURCE_ROOT; };
+		EE28E89B1F308A5F00A36F95 /* RNAdCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNAdCache.m; sourceTree = SOURCE_ROOT; };
+		EE28E89D1F308F2C00A36F95 /* AdCacheModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AdCacheModule.h; sourceTree = SOURCE_ROOT; };
+		EE28E89E1F308F2C00A36F95 /* AdCacheModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AdCacheModule.m; sourceTree = SOURCE_ROOT; };
+		EE3A9BBA1F2F65E7007DCEA9 /* RNDFPAdView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNDFPAdView.h; sourceTree = SOURCE_ROOT; };
+		EE3A9BBB1F2F65E7007DCEA9 /* RNDFPAdView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNDFPAdView.m; sourceTree = SOURCE_ROOT; };
+		EE3A9BBD1F2F6674007DCEA9 /* DFPAdViewManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DFPAdViewManager.h; sourceTree = SOURCE_ROOT; };
+		EE3A9BBE1F2F6674007DCEA9 /* DFPAdViewManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DFPAdViewManager.m; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,12 +85,22 @@
 		A96DA7761C146D7200FC639B /* RNAdMobManager */ = {
 			isa = PBXGroup;
 			children = (
+				EE28E89D1F308F2C00A36F95 /* AdCacheModule.h */,
+				EE28E89E1F308F2C00A36F95 /* AdCacheModule.m */,
+				EE28E89A1F30866900A36F95 /* RNAdCache.h */,
+				EE28E89B1F308A5F00A36F95 /* RNAdCache.m */,
 				0CB8C04C1D9143A6002BC3EF /* RNAdMobDFPManager.h */,
+				EE28E8901F2FAD1000A36F95 /* RNAdListener.h */,
+				EE28E8911F2FAD1000A36F95 /* RNAdListener.m */,
 				0CB8C04D1D9143A6002BC3EF /* RNAdMobDFPManager.m */,
 				A96DA7801C146DA600FC639B /* BannerView.h */,
 				A96DA7811C146DA600FC639B /* BannerView.m */,
 				A96DA7821C146DA600FC639B /* RNAdMobManager.h */,
 				A96DA7831C146DA600FC639B /* RNAdMobManager.m */,
+				EE3A9BBA1F2F65E7007DCEA9 /* RNDFPAdView.h */,
+				EE3A9BBB1F2F65E7007DCEA9 /* RNDFPAdView.m */,
+				EE3A9BBD1F2F6674007DCEA9 /* DFPAdViewManager.h */,
+				EE3A9BBE1F2F6674007DCEA9 /* DFPAdViewManager.m */,
 				A962C2511CB27DBD00E508A1 /* RNAdMobInterstitial.h */,
 				A962C2521CB27DBD00E508A1 /* RNAdMobInterstitial.m */,
 				0CB8C0491D913E00002BC3EF /* RNDFPBannerView.h */,
@@ -144,8 +169,13 @@
 				A962C2531CB27DBD00E508A1 /* RNAdMobInterstitial.m in Sources */,
 				0CB8C04B1D913E00002BC3EF /* RNDFPBannerView.m in Sources */,
 				A96DA7841C146DA600FC639B /* BannerView.m in Sources */,
+				EE28E89F1F308F2C00A36F95 /* AdCacheModule.m in Sources */,
 				A96DA7851C146DA600FC639B /* RNAdMobManager.m in Sources */,
+				EE28E8921F2FAD1000A36F95 /* RNAdListener.m in Sources */,
+				EE3A9BBC1F2F65E7007DCEA9 /* RNDFPAdView.m in Sources */,
 				0CB8C04E1D9143A6002BC3EF /* RNAdMobDFPManager.m in Sources */,
+				EE3A9BBF1F2F6674007DCEA9 /* DFPAdViewManager.m in Sources */,
+				EE28E89C1F308A5F00A36F95 /* RNAdCache.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,13 +266,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/../../mobile-apps-edge/ios/Pods/Google-Mobile-Ads-SDK/Frameworks/**",
 					"$(PROJECT_DIR)/../../../ios/**",
 					"$(PROJECT_DIR)/../../../ios/Pods/Google-Mobile-Ads-SDK/Frameworks/**",
-					"/Users/michaelhancock/24/edgeup/News24Edge/ios/Pods/Google-Mobile-Ads-SDK/Frameworks/**",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../../../node_modules/react-native/React/**",
+					"$(PROJECT_DIR)/../../mobile-apps-edge/node_modules/react-native/React",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -254,13 +285,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/../../mobile-apps-edge/ios/Pods/Google-Mobile-Ads-SDK/Frameworks/**",
 					"$(PROJECT_DIR)/../../../ios/**",
 					"$(PROJECT_DIR)/../../../ios/Pods/Google-Mobile-Ads-SDK/Frameworks/**",
-					"/Users/michaelhancock/24/edgeup/News24Edge/ios/Pods/Google-Mobile-Ads-SDK/Frameworks/**",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/../../../node_modules/react-native/React/**",
+					"$(PROJECT_DIR)/../../mobile-apps-edge/node_modules/react-native/React",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
