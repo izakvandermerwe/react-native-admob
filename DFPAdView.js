@@ -8,9 +8,9 @@ import {
   findNodeHandle,
 } from 'react-native';
 
-const RNBanner = requireNativeComponent('RNAdMobDFP', PublisherBanner);
+const RNBanner = requireNativeComponent('DFPAdView', DFPAdView);
 
-export default class PublisherBanner extends React.Component {
+export default class DFPAdView extends React.Component {
 
   constructor() {
     super();
@@ -25,13 +25,19 @@ export default class PublisherBanner extends React.Component {
 
     const { height, width } = event.nativeEvent;
     console.log('ADS: onSizeChange: ',height, width);
-        console.log('ADS: onSizeChange: ',height, width);
     this.setState({ style: { width, height } });
+
+
+
+    if(this.props.onSizeChange){
+        this.props.onSizeChange(event);
+    }
 }
 
 
   render() {
-    const { adUnitID, testDeviceID, bannerSizes, keywords,style, didFailToReceiveAdWithError,admobDispatchAppEvent } = this.props;
+    const { adUnitID, testDeviceID, bannerSizes, keywords,style, didFailToReceiveAdWithError,admobDispatchAppEvent,cacheKey,cacheGroup } = this.props;
+    
     return (
       <View style={this.props.style}>
         <RNBanner
@@ -45,33 +51,22 @@ export default class PublisherBanner extends React.Component {
           onAdViewDidDismissScreen={this.props.adViewDidDismissScreen}
           onAdViewWillLeaveApplication={this.props.adViewWillLeaveApplication}
           onAdmobDispatchAppEvent={(event) => admobDispatchAppEvent(event)}
-          testDeviceID={testDeviceID}
-          adUnitID={adUnitID}
-          bannerSizes={bannerSizes}
-          keywords={keywords} />
+          ad={{
+              adUnit:adUnitID,
+              adSizes:bannerSizes,
+              keywords,
+              cacheKey,
+              cacheGroup
+          }}
+          />
       </View>
     );
   }
 
-  componentDidMount(){
-      console.log('ADS: JSADVIEW ad loading...')
-      this.loadAd()
-  }
 
-  componentWillUnmount(){
-      console.log('ADS: JSADVIEW componentWillUnmount...')
-  }
-
-  loadAd() {
-        UIManager.dispatchViewManagerCommand(
-            findNodeHandle(this.refs.banner),
-            UIManager.RNAdMobDFP.Commands.loadAd,
-            [],
-        );
-    }
 }
 
-PublisherBanner.propTypes = {
+DFPAdView.propTypes = {
   style: View.propTypes.style,
 
   /**
@@ -105,7 +100,7 @@ PublisherBanner.propTypes = {
   testDeviceID: React.PropTypes.string,
 
   /**
-   * AdMob iOS library events
+   * AdMob events
    */
   adViewDidReceiveAd: React.PropTypes.func,
   didFailToReceiveAdWithError: React.PropTypes.func,
@@ -117,5 +112,5 @@ PublisherBanner.propTypes = {
   ...View.propTypes,
 };
 
-PublisherBanner.defaultProps = { bannerSizes: ["banner"], didFailToReceiveAdWithError: () => {} ,
+DFPAdView.defaultProps = { bannerSizes: ["banner"], didFailToReceiveAdWithError: () => {} ,
 admobDispatchAppEvent: () => {}};
