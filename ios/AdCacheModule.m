@@ -16,7 +16,7 @@ RCT_EXPORT_MODULE();
 
 RCT_EXPORT_METHOD(clearGroup:(NSString *)group)
 {
-    NSLog(@" clearing ad cache group  %@",group);
+    NSLog(@"ADS: clearing ad cache group  %@",group);
     [RNAdCache clearGroup:group];
 }
 

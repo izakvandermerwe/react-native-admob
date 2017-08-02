@@ -49,23 +49,29 @@
     
     if( [name isEqualToString:@"app-event"]  )
     {
-        NSLog(@"ADS: appevnt %@",name);
-        self.view.onAdmobDispatchAppEvent(data);
+        if(self.view.onAdmobDispatchAppEvent != nil)
+            self.view.onAdmobDispatchAppEvent(data);
     }else if([name isEqualToString:@"size-change"] ){
-        NSLog(@"ADS: sizechange %@",name);
-        self.view.onSizeChange(data);
+        if(self.view.onSizeChange != nil)
+            self.view.onSizeChange(data);
     }else if([name isEqualToString:@"recieve-ad"] ){
-        self.view.onAdViewDidReceiveAd(data);
+        if(self.view.onAdViewDidReceiveAd != nil)
+            self.view.onAdViewDidReceiveAd(data);
     }else if([name isEqualToString:@"failed-to-recieve-ad"] ){
-        self.view.onDidFailToReceiveAdWithError(data);
+        if(self.view.onDidFailToReceiveAdWithError != nil)
+            self.view.onDidFailToReceiveAdWithError(data);
     }else if([name isEqualToString:@"present-screen"] ){
-        self.view.onAdViewWillPresentScreen(data);
+        if(self.view.onAdViewWillPresentScreen != nil)
+            self.view.onAdViewWillPresentScreen(data);
     }else if([name isEqualToString:@"will-dismiss-screen"] ){
-        self.view.onAdViewWillDismissScreen(data);
+        if(self.view.onAdViewWillDismissScreen != nil)
+            self.view.onAdViewWillDismissScreen(data);
     }else if([name isEqualToString:@"did-dismiss-screen"] ){
-        self.view.onAdViewDidDismissScreen(data);
+        if(self.view.onAdViewDidDismissScreen != nil)
+            self.view.onAdViewDidDismissScreen(data);
     }else if([name isEqualToString:@"will-leave-app"] ){
-        self.view.onAdViewWillLeaveApplication(data);
+        if(self.view.onAdViewWillLeaveApplication != nil)
+            self.view.onAdViewWillLeaveApplication(data);
     }
 }
 
