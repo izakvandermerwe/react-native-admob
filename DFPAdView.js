@@ -37,7 +37,7 @@ export default class DFPAdView extends React.Component {
 
   render() {
     const { adUnitID, testDeviceID, bannerSizes, keywords,style, didFailToReceiveAdWithError,admobDispatchAppEvent,cacheKey,cacheGroup } = this.props;
-    
+
     return (
       <View style={this.props.style}>
         <RNBanner

@@ -84,7 +84,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
          cacheKey = [ad valueForKey:@"cacheKey"];
         NSString *adUnit = [ad valueForKey:@"adUnit"];
         NSLog(@"ADS: adUnit: %@",[ad valueForKey:@"adUnit"]);
-        NSLog(@"ADS: cacheKey: %@",[ad valueForKey:@"adUnit"]);
+        NSLog(@"ADS: cacheKey: %@",[ad valueForKey:@"cacheKey"]);
         
         
         NSArray *sizes = [ad valueForKey:@"adSizes"];
@@ -144,10 +144,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
                 _bannerView.adUnitID = adUnit;
                 _bannerView.validAdSizes = [adSizes copy];
                 self.listener = [[RNAdListener alloc] init];
-                NSLog(@"ADS: TESTING LISTENER: %@ %@",self.listener, cacheKey);
+              
                 [_bannerView setAppEventDelegate: (id)self.listener];
                 _bannerView.delegate = (id)self.listener;
-                NSLog(@"ADS: TESTING delegate: %@ %@",_bannerView.delegate,cacheKey);
+              
                 _bannerView.rootViewController = [UIApplication sharedApplication].delegate.window.rootViewController;
                 self.listener.adView = _bannerView;
                 self.listener.view = self;
@@ -165,9 +165,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
             }
             
             [self addSubview: _bannerView];
-            NSLog(@"ADS: TESTING adding subView: %@ %@ %@",_bannerView, _bannerView.superview,cacheKey);
+            
             if(load){
-                NSLog(@"ADS: TESTING loading request: %@",cacheKey);
+            
                 [_bannerView loadRequest:request];
             }
             if(refire)
@@ -178,14 +178,14 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
     }@catch (NSException *exception) {
         NSLog(@"ADS: ERROR %@", exception.reason);
     }
-    NSLog(@"ADS: TESTING LOAD: %@ %@",self.listener,cacheKey);
+    
   
 }
 
 -(void)layoutSubviews
 {
-    NSLog(@"ADS: layoutSubviews");
-    [super layoutSubviews ];
+    NSLog(@"ADS: layoutSubviews %@ %@",self.listener.adView.superview,self);
+    
     UIView *  _bannerView = self.listener.adView;
     
     _bannerView.frame =CGRectMake(
@@ -193,7 +193,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
           self.bounds.origin.x,
           _bannerView.frame.size.width,
         _bannerView.frame.size.height);
-    
+    [super layoutSubviews ];
 }
 
 - (void)removeFromSuperview
