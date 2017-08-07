@@ -50,7 +50,7 @@ public class DFPAdViewManager extends SimpleViewManager<RNAdView>{
         Map<String, Object> json = Utils.toMap(map);
 
         String adUnit = (String) json.get("adUnit");
-        String cacheKey = (String) json.get("adUnit");
+        String cacheKey = (String) json.get("cacheKey");
         String cacheGroup = (String) json.get("cacheGroup");
         Log.d(LOGTAG,String.format("cacheKey: %s", cacheKey));
         Log.d(LOGTAG,String.format("cacheGroup: %s", cacheGroup));
