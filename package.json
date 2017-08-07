@@ -1,6 +1,6 @@
 {
   "name": "react-native-admob",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "A react-native component for Google AdMob banners and interstitials",
   "main": "index.js",
   "repository": {
