@@ -50,9 +50,12 @@ public class DFPAdViewManager extends SimpleViewManager<RNAdView>{
         Map<String, Object> json = Utils.toMap(map);
 
         String adUnit = (String) json.get("adUnit");
-        String cacheKey = (String) json.get("adUnit");
+        String cacheKey = (String) json.get("cacheKey");
+        boolean enableCache = cacheKey!=null&&cacheKey!="";
+        if(cacheKey==null)
+            cacheKey="";
         String cacheGroup = (String) json.get("cacheGroup");
-        Log.d(LOGTAG,String.format("cacheKey: %s", cacheKey));
+        Log.d(LOGTAG,String.format("cacheKey: %s cacheEnabled:%s", cacheKey,enableCache));
         Log.d(LOGTAG,String.format("cacheGroup: %s", cacheGroup));
 
 
@@ -97,7 +100,7 @@ public class DFPAdViewManager extends SimpleViewManager<RNAdView>{
         PublisherAdView adView = (PublisherAdView) view.getChildAt(0);
         boolean refire = false;
         if(adView == null){
-            if(cacheKey!=null)
+            if(enableCache)
                 adView = viewCache.getView(cacheGroup,cacheKey,PublisherAdView.class);
             if(adView == null){
                 Log.d(LOGTAG, "creating adview" +cacheKey);
@@ -107,7 +110,7 @@ public class DFPAdViewManager extends SimpleViewManager<RNAdView>{
                 RNAdListener adListener = new RNAdListener(adView,mEventEmitter,cacheKey);
                 adView.setAppEventListener(adListener);
                 adView.setAdListener(adListener);
-                if(cacheKey!=null)
+                if(enableCache)
                     viewCache.addView(cacheGroup,cacheKey,adView);
                 adView.loadAd(adRequest);
             }else{
