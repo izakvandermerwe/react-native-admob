@@ -14,24 +14,23 @@ export default class DFPAdView extends React.Component {
 
   constructor() {
     super();
-    this.onSizeChange = this.onSizeChange.bind(this);
+    //this.onSizeChanged = this.onSizeChanged.bind(this);
     this.state = {
       style: {},
     };
   }
 
 
-  onSizeChange(event) {
-
+  _onSizeChanged = (event) => {
+    console.log('ADS: onSizeChange: ----');
     const { height, width } = event.nativeEvent;
     console.log('ADS: onSizeChange: ',height, width);
     this.setState({ style: { width, height } });
 
-
-
     if(this.props.onSizeChange){
         this.props.onSizeChange(event);
     }
+
 }
 
 
@@ -43,7 +42,7 @@ export default class DFPAdView extends React.Component {
         <RNBanner
           ref="banner"
           style={this.state.style}
-          onSizeChange={this.onSizeChange.bind(this)}
+
           onAdViewDidReceiveAd={this.props.adViewDidReceiveAd}
           onDidFailToReceiveAdWithError={(event) => didFailToReceiveAdWithError(event.nativeEvent.error)}
           onAdViewWillPresentScreen={this.props.adViewWillPresentScreen}
@@ -51,6 +50,7 @@ export default class DFPAdView extends React.Component {
           onAdViewDidDismissScreen={this.props.adViewDidDismissScreen}
           onAdViewWillLeaveApplication={this.props.adViewWillLeaveApplication}
           onAdmobDispatchAppEvent={(event) => admobDispatchAppEvent(event)}
+          onSizeChange={this._onSizeChanged}
           ad={{
               adUnit:adUnitID,
               adSizes:bannerSizes,
@@ -109,6 +109,7 @@ DFPAdView.propTypes = {
   adViewDidDismissScreen: React.PropTypes.func,
   adViewWillLeaveApplication: React.PropTypes.func,
   admobDispatchAppEvent: React.PropTypes.func,
+  sizeChange: React.PropTypes.func,
   ...View.propTypes,
 };
 
