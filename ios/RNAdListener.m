@@ -52,11 +52,18 @@
         if(self.view.onAdmobDispatchAppEvent != nil)
             self.view.onAdmobDispatchAppEvent(data);
     }else if([name isEqualToString:@"size-change"] ){
-        if(self.view.onSizeChange != nil)
+        if(self.view.onSizeChange != nil){
+            NSLog(@"ADS: onSizeChange trigger");
             self.view.onSizeChange(data);
+        }else
+            NSLog(@"ADS: onSizeChange was null %@",self.view.onSizeChange);
     }else if([name isEqualToString:@"recieve-ad"] ){
-        if(self.view.onAdViewDidReceiveAd != nil)
+        if(self.view.onAdViewDidReceiveAd != nil){
+             NSLog(@"ADS: onAdViewDidReceiveAd trigger");
             self.view.onAdViewDidReceiveAd(data);
+        }else{
+            NSLog(@"ADS: onAdViewDidReceiveAd was null");
+        }
     }else if([name isEqualToString:@"failed-to-recieve-ad"] ){
         if(self.view.onDidFailToReceiveAdWithError != nil)
             self.view.onDidFailToReceiveAdWithError(data);
@@ -156,7 +163,7 @@ didFailToReceiveAdWithError:(GADRequestError *)error {
 
 
 -(void) refireEvents{
-    
+    NSLog(@"ADS: refireEvents");
     for (NSDictionary* e in self.events) {
         [self dispatchEvent:e];
     }
