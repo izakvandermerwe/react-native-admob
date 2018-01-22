@@ -85,8 +85,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
         NSString *adUnit = [ad valueForKey:@"adUnit"];
         NSLog(@"ADS: adUnit: %@",[ad valueForKey:@"adUnit"]);
         NSLog(@"ADS: cacheKey: %@",[ad valueForKey:@"cacheKey"]);
-        
-        
+
         NSArray *sizes = [ad valueForKey:@"adSizes"];
         NSMutableArray *adSizes = [[NSMutableArray alloc] init];
         for(id currentSize in sizes)
@@ -95,8 +94,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
             [adSizes addObject: NSValueFromGADAdSize(size)];
             NSLog(@"ADS: Parsing adsize(%@)", NSValueFromGADAdSize(size));
         }
-
-        
     
         GADRequest *request = [GADRequest request];
         
@@ -126,6 +123,16 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:coder)
             [request registerAdNetworkExtras:extras];
         }
         
+        if( [ad objectForKey:@"contentUrl"] != nil )
+        {
+            NSString *contentUrl = [ad valueForKey:@"contentUrl"];
+            
+            if (contentUrl != nil && contentUrl != @"")
+            {
+                NSLog(@"ADS: contentUrl: %@",contentUrl);
+                request.contentURL = contentUrl;
+            }
+        }
         
         bool refire = false;
         bool load=false;

@@ -35,7 +35,7 @@ export default class DFPAdView extends React.Component {
 
 
   render() {
-    const { adUnitID, testDeviceID, bannerSizes, keywords,style, didFailToReceiveAdWithError,admobDispatchAppEvent,cacheKey,cacheGroup } = this.props;
+    const { adUnitID, testDeviceID, bannerSizes, keywords,style, didFailToReceiveAdWithError,admobDispatchAppEvent,cacheKey,cacheGroup,contentUrl } = this.props;
 
     return (
       <View style={this.props.style}>
@@ -56,7 +56,8 @@ export default class DFPAdView extends React.Component {
               adSizes:bannerSizes,
               keywords,
               cacheKey,
-              cacheGroup
+              cacheGroup,
+              contentUrl
           }}
           />
       </View>
@@ -98,6 +99,11 @@ DFPAdView.propTypes = {
    * Test device ID
    */
   testDeviceID: React.PropTypes.string,
+
+  /**
+   *  DFP  Content Mapping URL
+   */
+  contentUrl: React.PropTypes.string,
 
   /**
    * AdMob events

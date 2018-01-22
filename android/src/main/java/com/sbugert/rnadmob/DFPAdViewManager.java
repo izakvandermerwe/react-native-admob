@@ -96,6 +96,12 @@ public class DFPAdViewManager extends SimpleViewManager<RNAdView>{
             }
         }
 
+        if(json.containsKey("contentUrl")) {
+            String contentUrl = (String) json.get("contentUrl");
+            adRequestBuilder.setContentUrl(contentUrl);
+            Log.d(LOGTAG, "setting contentUrl: " +contentUrl);
+        }
+
         PublisherAdRequest adRequest = adRequestBuilder.build();
         PublisherAdView adView = (PublisherAdView) view.getChildAt(0);
         boolean refire = false;
